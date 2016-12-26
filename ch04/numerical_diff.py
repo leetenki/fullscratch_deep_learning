@@ -1,8 +1,17 @@
+import numpy as np
+import matplotlib.pylab as plt
+
 def numerical_diff(f, x):
-    h = 10e-8
+    h = 1e-4
     return (f(x+h) - f(x-h)) / (2*h)
 
 def func(x):
-    return x**2
+    return 0.01 * x ** 2 + 0.1 * x
 
-print(numerical_diff(func, 10))
+x = np.arange(0.0, 20.0, 0.1)
+y = func(x)
+y_grad = numerical_diff(func, x)
+
+plt.plot(x, y)
+plt.plot(x, y_grad)
+plt.show()
