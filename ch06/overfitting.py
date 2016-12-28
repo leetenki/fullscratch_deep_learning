@@ -14,12 +14,14 @@ class TwoLayerNet:
         self.layers = OrderedDict()
         self.layers["l1"] = Linear(input_size, hidden_size)
         self.layers["relu1"] = ReLU()
+        self.layers["dropout"] = Dropout()
         self.layers["l2"] = Linear(hidden_size, output_size)
         self.layers["softmax_loss"] = SoftmaxCrossEntropy()
 
-    def predict(self, x):
+    def predict(self, x, train=True):
         h = self.layers["l1"].forward(x)
         h = self.layers["relu1"].forward(h)
+        h = self.layers["dropout"].forward(h, train)
         y = self.layers["l2"].forward(h)
 
         return y
@@ -28,8 +30,8 @@ class TwoLayerNet:
         y = self.predict(x)
         return self.layers["softmax_loss"].forward(y, t)
 
-    def accuracy(self, x, t):
-        y = self.predict(x)
+    def accuracy(self, x, t, train=True):
+        y = self.predict(x, train)
         y = np.argmax(y, axis=1)
         if t.ndim != 1 : t = np.argmax(t, axis=1)
 
@@ -41,6 +43,7 @@ class TwoLayerNet:
         dout = self.layers["softmax_loss"].backward()
         dout = self.layers["l2"].backward(dout)
         dout = self.layers["relu1"].backward(dout)
+        dout = self.layers["dropout"].backward(dout)
         dout = self.layers["l1"].backward(dout)
 
         return dout
@@ -61,15 +64,16 @@ class TwoLayerNet:
 
 # ハイパーパラメータ
 iters_num = 10000
-train_size = x_train.shape[0]
+train_size = 300
+test_size = x_test.shape[0]
 batch_size = 100
 learning_rate = 0.1
 
 # init model
 model = TwoLayerNet(784, 1000, 10)
-#optimizer = SGD(model, learning_rate)
+optimizer = SGD(model, learning_rate)
 #optimizer = Momentum(model, learning_rate)
-optimizer = AdaGrad(model, learning_rate)
+#optimizer = AdaGrad(model, learning_rate)
 
 for i in range(iters_num):
     batch_mask = np.random.choice(train_size, batch_size) # train_size(60000以下)から、batch_size(100)個を選ぶ
@@ -77,14 +81,16 @@ for i in range(iters_num):
     t_batch = t_train[batch_mask]
 
     model.forward(x_batch, t_batch)
+    train_accuracy = model.accuracy(x_batch, t_batch, train=False)
+
+    # learn
     model.backward()
     optimizer.update()
 
-    # numerical_gradient check
-    #numerical_grads = model.numerical_grad(x_batch, t_batch)
-    #print(np.sum(numerical_grads["W1"] - model.layers["l1"].dW))
-    #print(np.sum(numerical_grads["W2"] - model.layers["l2"].dW))
-    #print(np.sum(numerical_grads["b1"] - model.layers["l1"].db))
-    #print(np.sum(numerical_grads["b2"] - model.layers["l2"].db))
+    # test
+    batch_mask = np.random.choice(test_size, batch_size) # train_size(60000以下)から、batch_size(100)個を選ぶ
+    x_batch = x_test[batch_mask]
+    t_batch = t_test[batch_mask]
+    test_accuracy = model.accuracy(x_batch, t_batch, train=False)
 
-    print(model.accuracy(x_batch, t_batch))
+    print(train_accuracy, test_accuracy)

@@ -22,7 +22,7 @@ def cross_entropy_error(y, t):
         t = t.argmax(axis=1)
 
     batch_size = y.shape[0]
-    return -np.sum(np.log(y[np.arange(batch_size), t])) / batch_size # batch内のt==1となるyを全部合計して、最後にbatch_sizeで割る
+    return -np.sum(np.log(y[np.arange(batch_size), t] + 1e-7)) / batch_size # batch内のt==1となるyを全部合計して、最後にbatch_sizeで割る
 
 class SoftmaxCrossEntropy:
     def __init__(self):

@@ -1,9 +1,10 @@
 import numpy as np
 
 class Linear:
-    def __init__(self, n_in, n_out):
-        self.W = 0.01 * np.random.randn(n_out, n_in)
+    def __init__(self, n_in, n_out, weight_decay_rate=0.1):
+        self.W = np.random.randn(n_out, n_in) * np.sqrt(2 / n_in) # xavierの初期値
         self.b = np.zeros(n_out)
+        self.weight_decay_rate = weight_decay_rate
         self.x = None
         self.dW = None
         self.db = None
@@ -16,14 +17,10 @@ class Linear:
 
     def backward(self, dout):
         dx = np.dot(dout, self.W)
-        self.dW = np.dot(dout.T, self.x)
-        self.db = np.sum(dout, axis=0)
+        self.dW = np.dot(dout.T, self.x) + self.weight_decay_rate * self.W # with weight_decay
+        self.db = np.sum(dout, axis=0) + self.weight_decay_rate * self.b # with weight_decay
 
         return dx
-
-    def update(self, epsilon=0.1):
-        self.W = self.W - self.dW * epsilon
-        self.b = self.b - self.db * epsilon
 
 class Affine:
     def __init__(self, n_input, n_output, weight_init_std=0.01): 
@@ -53,7 +50,3 @@ class Affine:
           
         dx = dx.reshape(*self.original_x_shape)  # 入力データの形状に戻す（テンソル対応）
         return dx
-
-    def update(self, epsilon=0.1):
-        self.W -= self.dW * epsilon
-        self.b -= self.db * epsilon
