@@ -1,0 +1,2 @@
+# ゼロからのDeep Learning実装
+chapter1〜chapter7で実装したコードのまとめ
